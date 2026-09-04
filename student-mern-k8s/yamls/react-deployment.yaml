@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-deploy
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: react
+
+  template:
+    metadata:
+      labels:
+        app: react
+
+    spec:
+      containers:
+        - name: react
+          image: abhisalunke16/student-frontend:v1
+
+          ports:
+            - containerPort: 80
