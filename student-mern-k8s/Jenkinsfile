@@ -3,10 +3,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USERNAME = 'YOUR_DOCKERHUB_USERNAME'
+        DOCKER_USERNAME = 'abhisalunke16'
 
-        FRONTEND_IMAGE = "${DOCKER_USERNAME}/students-frontend"
-        BACKEND_IMAGE  = "${DOCKER_USERNAME}/students-backend"
+        FRONTEND_IMAGE = 'abhisalunke16/student-mern-frontend'
+        BACKEND_IMAGE  = 'abhisalunke16/student-mern-backend'
 
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
@@ -17,6 +17,19 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/abhijeet-salunke-in/student-mern-kubernetes.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=student-mern-kubernetes \
+                        -Dsonar.projectName=student-mern-kubernetes \
+                        -Dsonar.sources=.
+                    '''
+                }
             }
         }
 
@@ -54,9 +67,7 @@ pipeline {
                         echo "$DOCKER_PASSWORD" | docker login \
                         -u "$DOCKER_USER" \
                         --password-stdin
-                    '''
 
-                    sh '''
                         docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
                         docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
                     '''
@@ -72,24 +83,25 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Verify Kubernetes Deployment') {
             steps {
                 sh '''
                     kubectl get pods
-                    kubectl get services
                     kubectl get deployments
+                    kubectl get services
                 '''
             }
         }
     }
 
     post {
+
         success {
-            echo 'MERN application pipeline completed successfully.'
+            echo 'MERN CI/CD pipeline completed successfully.'
         }
 
         failure {
-            echo 'MERN application pipeline failed.'
+            echo 'MERN CI/CD pipeline failed.'
         }
     }
 }
